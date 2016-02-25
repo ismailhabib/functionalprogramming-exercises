@@ -15,17 +15,18 @@ object List {
 
 
   def tail[A](list: List[A]) = list match {
-    case Nil => Nil
+    case Nil => throw new NoSuchElementException("List is empty")
     case Cons(x, tail) => tail
   }
 
   def setHead[A](head: A, list: List[A]): List[A] = list match {
     case Nil => Cons(head, Nil)
-    case Cons(head, tail) => Cons(head, tail)
+    case Cons(head2, tail) => Cons(head, tail)
   }
 
   def drop[A](l: List[A], n: Int): List[A] = n match {
-    case 0 => tail(l)
+    case n if n < 0 => throw new NoSuchElementException("n is too large")
+    case 0 => l
     case _ => drop(tail(l), n - 1)
   }
 
@@ -81,14 +82,32 @@ object List {
 
   def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B = foldRight(reverse(as), z)((a, b) => f(b, a))
 
+//  def foldLeft3[A, B](l: List[A], z: B)(f: (B, A) => B): B = foldRight(l, (x:B) => x)((x,acc)=>y=>acc(f(y,x))))(z)
+
   def append[A](a1: List[A], a2: List[A]): List[A] = foldRight(a1, a2)((x, y) => Cons(x, y))
 
   def concat[A](l: List[List[A]]): List[A] = foldRight(l, Nil: List[A])((x, y) => append(x, y))
+
+  //Exercise 3.16
+  def addOne(l: List[Int]):List[Int] = l match {
+    case Nil => Nil
+    case Cons(x, xs) => Cons(x + 1, addOne(xs))
+  }
+
+  def toString(l: List[Double]):List[String] = l match {
+    case Nil => Nil
+    case Cons(x,xs) => Cons(x.toString, toString(xs))
+  }
+
+  def map[A,B](as: List[A])(f: A => B):List[B] = as match {
+
+  }
 }
 
 object Exercise3 {
 
   def main(args: Array[String]) = {
+    println(List.drop(List(1,2,3,4),2))
     println(List.init(Cons(1, Cons(2, Nil))))
     println(List.init(Cons(1, Cons(2, Cons(3, Nil)))))
     println(List.length(Cons(1, Cons(2, Cons(3, Nil)))))
@@ -96,5 +115,8 @@ object Exercise3 {
     println(List.product(Cons(1, Cons(2, Cons(3, Nil)))))
     println(List.lengthLeft(Cons(1, Cons(2, Cons(3, Nil)))))
     println(List.append(Cons(1, Cons(2, Cons(3, Nil))), Cons(4, Cons(5, Nil))))
+    println(List.concat(Cons(Cons(4, Cons(5, Nil)), Cons(Cons(4, Cons(5, Nil)), Cons(Cons(4, Cons(5, Nil)), Nil)))))
+    println("Add one: " + List.addOne(List(1,2,3,4,5)))
+    println("To string: " + List.toString(List(1,2,3,4,5)))
   }
 }
