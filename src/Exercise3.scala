@@ -82,32 +82,56 @@ object List {
 
   def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B = foldRight(reverse(as), z)((a, b) => f(b, a))
 
-//  def foldLeft3[A, B](l: List[A], z: B)(f: (B, A) => B): B = foldRight(l, (x:B) => x)((x,acc)=>y=>acc(f(y,x))))(z)
+  //  def foldLeft3[A, B](l: List[A], z: B)(f: (B, A) => B): B = foldRight(l, (x:B) => x)((x,acc)=>y=>acc(f(y,x))))(z)
 
   def append[A](a1: List[A], a2: List[A]): List[A] = foldRight(a1, a2)((x, y) => Cons(x, y))
 
+  //Exercise 3.15
   def concat[A](l: List[List[A]]): List[A] = foldRight(l, Nil: List[A])((x, y) => append(x, y))
 
   //Exercise 3.16
-  def addOne(l: List[Int]):List[Int] = l match {
+  def addOne(l: List[Int]): List[Int] = l match {
     case Nil => Nil
     case Cons(x, xs) => Cons(x + 1, addOne(xs))
   }
 
-  def toString(l: List[Double]):List[String] = l match {
+  //Exercise 3.17
+  def toString(l: List[Double]): List[String] = l match {
     case Nil => Nil
-    case Cons(x,xs) => Cons(x.toString, toString(xs))
+    case Cons(x, xs) => Cons(x.toString, toString(xs))
   }
 
-  def map[A,B](as: List[A])(f: A => B):List[B] = as match {
-
+  //Exercise 3.18
+  def map[A, B](as: List[A])(f: A => B): List[B] = as match {
+    case Nil => Nil
+    case Cons(x, xs) => Cons(f(x), map(xs)(f))
   }
+
+  //Exercise 3.19
+  def filter[A](as: List[A])(f: A => Boolean): List[A] = as match {
+    case Nil => Nil
+    case Cons(x, xs) if f(x) => Cons(x, filter(xs)(f))
+    case Cons(x, xs) => filter(xs)(f)
+  }
+
+  def filterOdd(as: List[Int]): List[Int] = filter(as)(x => x % 2 == 0)
+
+  //Exercise 3.20
+  def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] = as match {
+    case Nil => Nil
+    case Cons(x, xs) => append(f(x), flatMap(xs)(f))
+  }
+
+  //Exercise 3.21
+  def filter2[A](as: List[A])(f: A => Boolean): List[A] = flatMap(as)(x => if (f(x)) List(x) else Nil)
+
+  def filterOdd2(as: List[Int]): List[Int] = filter2(as)(x => x % 2 == 0)
 }
 
 object Exercise3 {
 
   def main(args: Array[String]) = {
-    println(List.drop(List(1,2,3,4),2))
+    println(List.drop(List(1, 2, 3, 4), 2))
     println(List.init(Cons(1, Cons(2, Nil))))
     println(List.init(Cons(1, Cons(2, Cons(3, Nil)))))
     println(List.length(Cons(1, Cons(2, Cons(3, Nil)))))
@@ -116,7 +140,11 @@ object Exercise3 {
     println(List.lengthLeft(Cons(1, Cons(2, Cons(3, Nil)))))
     println(List.append(Cons(1, Cons(2, Cons(3, Nil))), Cons(4, Cons(5, Nil))))
     println(List.concat(Cons(Cons(4, Cons(5, Nil)), Cons(Cons(4, Cons(5, Nil)), Cons(Cons(4, Cons(5, Nil)), Nil)))))
-    println("Add one: " + List.addOne(List(1,2,3,4,5)))
-    println("To string: " + List.toString(List(1,2,3,4,5)))
+    println("Add one: " + List.addOne(List(1, 2, 3, 4, 5)))
+    println("To string: " + List.toString(List(1, 2, 3, 4, 5)))
+    println("Map x=x+1: " + List.map(List(1, 2, 3))(x => x + 1))
+    println("Filter odd: " + List.filterOdd(List(8, 3, 2, 5, 7, 4, 4)))
+    println("Flat Map x,x+1: " + List.flatMap(List(1, 2, 3))(x => List(x, x + 1)))
+    println("Filter odd 2: " + List.filterOdd2(List(8, 3, 2, 5, 7, 4, 4)))
   }
 }
