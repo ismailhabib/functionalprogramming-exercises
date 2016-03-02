@@ -87,12 +87,12 @@ object List {
   def append[A](a1: List[A], a2: List[A]): List[A] = foldRight(a1, a2)((x, y) => Cons(x, y))
 
   //Exercise 3.15
-  def concat[A](l: List[List[A]]): List[A] = foldRight(l, Nil: List[A])((x, y) => append(x, y))
+  def flatten[A](l: List[List[A]]): List[A] = foldRight(l, Nil: List[A])((x, y) => append(x, y))
 
   //Exercise 3.16
-  def addOne(l: List[Int]): List[Int] = l match {
+  def plusOne(l: List[Int]): List[Int] = l match {
     case Nil => Nil
-    case Cons(x, xs) => Cons(x + 1, addOne(xs))
+    case Cons(x, xs) => Cons(x + 1, plusOne(xs))
   }
 
   //Exercise 3.17
@@ -106,6 +106,8 @@ object List {
     case Nil => Nil
     case Cons(x, xs) => Cons(f(x), map(xs)(f))
   }
+
+  def map2[A, B](as: List[A])(f: A => B): List[B] = foldRight(as, Nil: List[B])((x, acc) => Cons(f(x), acc))
 
   //Exercise 3.19
   def filter[A](as: List[A])(f: A => Boolean): List[A] = as match {
@@ -128,12 +130,17 @@ object List {
   def filterOdd2(as: List[Int]): List[Int] = filter2(as)(x => x % 2 == 0)
 
   //Exercise 3.22
-  def addList(ints: List[Int], ints2: List[Int]): List[Int] = ints match {
+  def sumLists(ints: List[Int], ints2: List[Int]): List[Int] = ints match {
     case Nil => Nil
     case Cons(x, xs) => ints2 match {
       case Nil => Nil
-      case Cons(y, ys) => Cons(x + y, addList(xs, ys))
+      case Cons(y, ys) => Cons(x + y, sumLists(xs, ys))
     }
+  }
+
+  def sumLists2(ints: List[Int], ints2: List[Int]): List[Int] = (ints, ints2) match {
+    case (Nil, _) | (_, Nil) => Nil
+    case (Cons(x, xs), Cons(y, ys)) => Cons(x + y, sumLists(xs, ys))
   }
 
   //Exercise 3.23
@@ -145,9 +152,14 @@ object List {
     }
   }
 
+  def zipWith2[A, B, C](l1: List[A], l2: List[B])(f: (A, B) => C): List[C] = (l1, l2) match {
+    case (Nil, _) | (_, Nil) => Nil
+    case (Cons(x, xs), Cons(y, ys)) => Cons(f(x, y), zipWith2(xs, ys)(f))
+  }
+
   //Exercise 3.24
   def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = {
-    def rec(sup: List[A], pSub:List[A]): Boolean = {
+    def rec(sup: List[A], pSub: List[A], check: Boolean): Boolean = {
       sup match {
         case Nil => pSub match {
           case Nil => true
@@ -155,15 +167,27 @@ object List {
         }
         case Cons(x, xs) => pSub match {
           case Nil => true
-          case Cons(y, ys) if (x == y) => rec(xs, ys) || hasSubsequence(xs, sub)
-          case Cons(y, ys) => rec(xs, sub)
+          case Cons(y, ys) if (x == y) => rec(xs, ys, false) || rec(xs, sub, true)
+          case Cons(y, ys) if check => rec(xs, sub, true)
+          case _ => false
         }
       }
     }
-    rec(sup, sub)
+    rec(sup, sub, true)
   }
 
-
+  def hasSubsequence2[A](sup: List[A], sub: List[A]): Boolean = {
+    def rec(sup: List[A], pSub: List[A], check: Boolean): Boolean = {
+      (sup, pSub) match {
+        case (_, Nil) => true
+        case (Nil, _) => false
+        case (Cons(x, xs), Cons(y, ys)) if (x == y) => rec(xs, ys, false) || rec(xs, sub, true)
+        case (Cons(x, xs), Cons(y, ys)) => rec(xs, sub, true)
+        case _ => false
+      }
+    }
+    rec(sup, sub, true)
+  }
 }
 
 object Exercise3 {
@@ -177,14 +201,14 @@ object Exercise3 {
     println(List.product(Cons(1, Cons(2, Cons(3, Nil)))))
     println(List.lengthLeft(Cons(1, Cons(2, Cons(3, Nil)))))
     println(List.append(Cons(1, Cons(2, Cons(3, Nil))), Cons(4, Cons(5, Nil))))
-    println(List.concat(Cons(Cons(4, Cons(5, Nil)), Cons(Cons(4, Cons(5, Nil)), Cons(Cons(4, Cons(5, Nil)), Nil)))))
-    println("Add one: " + List.addOne(List(1, 2, 3, 4, 5)))
+    println(List.flatten(Cons(Cons(4, Cons(5, Nil)), Cons(Cons(4, Cons(5, Nil)), Cons(Cons(4, Cons(5, Nil)), Nil)))))
+    println("Add one: " + List.plusOne(List(1, 2, 3, 4, 5)))
     println("To string: " + List.toString(List(1, 2, 3, 4, 5)))
     println("Map x=x+1: " + List.map(List(1, 2, 3))(x => x + 1))
     println("Filter odd: " + List.filterOdd(List(8, 3, 2, 5, 7, 4, 4)))
     println("Flat Map x,x+1: " + List.flatMap(List(1, 2, 3))(x => List(x, x + 1)))
     println("Filter odd 2: " + List.filterOdd2(List(8, 3, 2, 5, 7, 4, 4)))
-    println("Add 2 list: " + List.addList(List(5, 4, 3), List(5, 10, 15)))
+    println("Add 2 list: " + List.sumLists(List(5, 4, 3), List(5, 10, 15)))
     println("Zip with: " + List.zipWith(List(5, 4, 3), List(5, 10, 15))((x, y) => x + y))
 
     val list1 = List(1, 2, 3, 4, 5)
@@ -193,6 +217,7 @@ object Exercise3 {
     val list4 = List(5, 6)
     val list5 = List(1, 3)
     val list6 = List(2)
+    var list7 = List(1, 2, 3, 5)
 
     println(List.hasSubsequence(list1, list1))
     println(List.hasSubsequence(list1, list2))
@@ -200,5 +225,14 @@ object Exercise3 {
     println(List.hasSubsequence(list1, list4))
     println(List.hasSubsequence(list1, list5))
     println(List.hasSubsequence(list1, list6))
+    println(List.hasSubsequence(list1, list7))
+
+    println(List.hasSubsequence2(list1, list1))
+    println(List.hasSubsequence2(list1, list2))
+    println(List.hasSubsequence2(list1, list3))
+    println(List.hasSubsequence2(list1, list4))
+    println(List.hasSubsequence2(list1, list5))
+    println(List.hasSubsequence2(list1, list6))
+    println(List.hasSubsequence2(list1, list7))
   }
 }
