@@ -190,7 +190,7 @@ object List {
   }
 }
 
-object Exercise3 {
+object Exercise3List {
 
   def main(args: Array[String]) = {
     println(List.drop(List(1, 2, 3, 4), 2))
