@@ -23,8 +23,8 @@ sealed trait Stream[+A] {
   }
 
   def drop(n: Int): Stream[A] = this match {
-    case Cons(h, t) if n > 1 => t().take(n - 1)
-    case _ => empty
+    case Cons(_, t) if n > 0 => t().take(n - 1)
+    case _ => this
   }
 
   //Exercise 5.3
@@ -45,7 +45,8 @@ sealed trait Stream[+A] {
   def forAll(p: A => Boolean): Boolean = foldRight(true)((a, b) => p(a) && b)
 
   //Exercise 5.5
-  def takeWhile2(p: A => Boolean): Stream[A] = foldRight(empty[A])((a, b) => if (p(a)) cons(a, b) else empty)
+  def takeWhile2(p: A => Boolean): Stream[A] =
+    foldRight(empty[A])((a, b) => if (p(a)) cons(a, b) else empty)
 
   //Exercise 5.6
   def headOption: Option[A] =

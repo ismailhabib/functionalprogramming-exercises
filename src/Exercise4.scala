@@ -89,7 +89,8 @@ sealed trait Either[+E, +A] {
       case Right(a) => Right(a)
     }
 
-  def map2[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] = for {a <- this; b1 <- b} yield f(a, b1)
+  def map2[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] =
+    for {a <- this; b1 <- b} yield f(a, b1)
 }
 
 object Either {
@@ -111,6 +112,7 @@ object Either {
       case e: Exception => Left(e)
     }
 
+  //Exercise 4.7
   def traverse[E, A, B](es: List[A])(f: A => Either[E, B]): Either[E, List[B]] =
     es match {
       case Nil => Right(Nil)
