@@ -1,3 +1,7 @@
+package errorhandling
+
+import datastructure._
+
 /**
   * Created by imu on 3/8/2016.
   */
@@ -126,5 +130,5 @@ object Either {
 
 object Exercise4 extends App {
 
-  println(Option.variance(List(1,2,3,4,5)))
+  //println(Option.variance(List(1,2,3,4,5)))
 }

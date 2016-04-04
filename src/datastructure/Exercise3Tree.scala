@@ -1,3 +1,5 @@
+package datastructure
+
 /**
   * Created by imu on 3/7/2016.
   */
