@@ -96,7 +96,7 @@ sealed trait Stream[+A] {
     zipWithAll(s2)((_, _))
 
   def zipWithAll[B, C](s2: Stream[B])(f: (Option[A], Option[B]) => C): Stream[C] =
-    Stream.unfold((this, s2)) {
+    unfold((this, s2)) {
       case (Empty, Empty) => None
       case (Cons(h, t), Empty) => Some(f(Some(h()), Option.empty[B]) ->(t(), empty[B]))
       case (Empty, Cons(h, t)) => Some(f(Option.empty[A], Some(h())) -> (empty[A] -> t()))
@@ -105,7 +105,7 @@ sealed trait Stream[+A] {
 
   //Exercise 5.14
   def startsWith[A](s: Stream[A]): Boolean =
-    zipAll(s).takeWhile(!_._2.isEmpty) forAll {
+    zipAll(s).takeWhile(!_._2.isEmpty).forAll {
       case (h, h2) => h == h2
     }
 
@@ -114,7 +114,7 @@ sealed trait Stream[+A] {
     unfold(this) {
       case Empty => None
       case s => Some((s, s.drop(1)))
-    } append Stream(empty)
+    }.append(Stream(empty))
 
   def hasSubsequence[A](s: Stream[A]): Boolean =
     tails.exists(_ startsWith s)
