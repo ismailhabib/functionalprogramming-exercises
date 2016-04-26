@@ -85,7 +85,7 @@ object RNG {
     rng => (a, rng)
 
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
-    fs.foldRight(unit(List[A]()))((x, acc) => map2(x, acc)((a,b) => a::b))
+    fs.foldRight(unit(List[A]()))((x, acc) => map2(x, acc)((a, b) => a :: b))
 
   def sequence_2[A](rs: List[Rand[A]]): Rand[List[A]] =
     rs match {
@@ -93,10 +93,10 @@ object RNG {
       case h :: t => map2(h, sequence_2(t))(_ :: _)
     }
 
-  def ints2(count: Int): Rand[List[Int]] = sequence(List.fill(count)(int))
+  //def ints2(count: Int): Rand[List[Int]] = sequence(List.fill(count)(int))
 
   //Exercise 6.8
-  def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
+  def flatMap[A, B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
     rng => {
       val (a, r1) = f(rng)
       g(a)(r1)
@@ -105,30 +105,41 @@ object RNG {
   def nonNegativeLessThan(n: Int): Rand[Int] = {
     flatMap(nonNegativeInt) { i =>
       val mod = i % n
-      if (i + (n-1) - mod >= 0) unit(mod) else nonNegativeLessThan(n)
+      if (i + (n - 1) - mod >= 0) unit(mod) else nonNegativeLessThan(n)
     }
   }
 
   //Exercise 6.9
-  def _map[A,B](s: Rand[A])(f: A => B): Rand[B] =
+  def _map[A, B](s: Rand[A])(f: A => B): Rand[B] =
     flatMap(s)(a => unit(f(a)))
 
-  def _map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+  def _map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
     flatMap(ra)(a => map(rb)(b => f(a, b)))
-
 
 
 }
 
+import State._
+
 case class State[S, +A](run: S => (A, S)) {
+
+  //Exercise 6.10
   def map[B](f: A => B): State[S, B] =
     flatMap(a => unit(f(a)))
-  def map2[B,C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
-    flatMap(a => sb.map(b => f(a, b)))
+
+  def map2[B, C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
+  //flatMap(a => sb.map(b => f(a, b)))
+
+    for {
+      a <- this
+      b <- sb
+    } yield (f(a, b))
+
   def flatMap[B](f: A => State[S, B]): State[S, B] = State(s => {
     val (a, s1) = run(s)
     f(a).run(s1)
   })
+
 }
 
 object State {
@@ -136,8 +147,55 @@ object State {
 
   def unit[S, A](a: A): State[S, A] =
     State(s => (a, s))
+
+  def sequence[S, A](sas: List[State[S, A]]): State[S, List[A]] =
+    sas.foldRight(unit[S, List[A]](List()))((x, acc) => x.map2(acc)(_ :: _))
+
+  def modify[S](f: S => S): State[S, Unit] = for {
+    s <- get
+    _ <- set(f(s))
+  } yield ()
+
+  def get[S]: State[S, S] = State(s => (s, s))
+
+  def set[S](s: S): State[S, Unit] = State(_ => ((), s))
+
 }
 
-class Exercise6 {
+sealed trait Input
+
+case object Coin extends Input
+
+case object Turn extends Input
+
+case class Machine(locked: Boolean, candies: Int, coins: Int) {
+  def update(input: Input) = input match {
+    case _ if candies == 0 => this
+    case Coin if locked => Machine(false, candies, coins + 1)
+    case Turn if !locked => Machine(true, candies - 1, coins)
+    case _ => this
+  }
+}
+
+object CandiesMachine {
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = State(machine => {
+    val (_, newMachine) = sequence(inputs.map(input => modify[Machine](_.update(input)))).run(machine)
+    ((newMachine.coins, newMachine.candies), newMachine)
+  }
+  )
+
+  def simulateMachine2(inputs: List[Input]): State[Machine, (Int, Int)] =
+    for {
+      _ <- sequence(inputs.map(input => modify[Machine](_.update(input))))
+      machine <- get
+    } yield (machine.coins, machine.candies)
+
+}
+
+import CandiesMachine._
+
+object Exercise6 extends App {
+  println(simulateMachine(List(Coin, Turn, Coin, Coin, Turn, Turn)).run(Machine(true, 10, 10)))
+  println(simulateMachine2(List(Coin, Turn, Coin, Coin, Turn, Turn)).run(Machine(true, 10, 10)))
 
 }
